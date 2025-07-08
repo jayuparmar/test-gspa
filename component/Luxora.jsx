@@ -1,6 +1,13 @@
 "use client"
-import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Play, Star, ArrowRight, Menu, X, Gem, Award, Shield, Heart } from 'lucide-react';
+import React, {useEffect, useRef, useState} from 'react';
+import { ChevronLeft, ChevronRight, Play, Star, ArrowRight, Menu, X, Gem, Award, Shield, Heart, ArrowUp } from 'lucide-react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Image from "next/image";
+
+gsap.registerPlugin(useGSAP, ScrollToPlugin,ScrollTrigger);
 
 const features =[
     {
@@ -88,7 +95,7 @@ const slides = [
 const jewelryCollections = [
     {
         name: "Engagement Rings",
-        image: "https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=400&h=400&fit=crop",
+        image: "https://i.etsystatic.com/25066512/r/il/e9f407/6082176438/il_570xN.6082176438_5863.jpg",
         price: "From $2,500",
         description: "Symbol of eternal love"
     },
@@ -106,7 +113,7 @@ const jewelryCollections = [
     },
     {
         name: "Pearl Earrings",
-        image: "https://images.unsplash.com/photo-1588444837495-b6d6cfbe2de4?w=400&h=400&fit=crop",
+        image: "https://assets.ajio.com/medias/sys_master/root/20230516/MTWm/646388bf42f9e729d78c8fc8/-473Wx593H-466160475-gold-MODEL.jpg",
         price: "From $450",
         description: "Classic sophistication"
     },
@@ -124,22 +131,94 @@ const jewelryCollections = [
     }
 ];
 
+const jewelryScrollableImages = [
+    {
+        id: 1,
+        alt: 'Gold bead bracelet on model',
+        src: 'https://cleopatrajewelers.com/cdn/shop/products/21k-bracelet-gold-413105_600x600.jpg?v=1697647280'
+    },
+    {
+        id: 2,
+        alt: '21k gold bracelet on wrist',
+        src: 'https://cleopatrajewelers.com/cdn/shop/products/21k-gold-ring-833635_600x600.jpg?v=1694577433'
+    },
+    {
+        id: 3,
+        alt: 'Diamond-cut gold Franco bracelet',
+        src: 'https://cleopatrajewelers.com/cdn/shop/products/21k-gold-ring-477890_600x600.jpg?v=1694577430'
+    },
+    {
+        id: 4,
+        alt: '18K gold oval bangle with diamonds',
+        src: 'https://cleopatrajewelers.com/cdn/shop/products/21k-gold-ring-398590_600x600.jpg?v=1694577462'
+    },
+    {
+        id: 5,
+        alt: 'Traditional Indian gold jewelry',
+        src: 'https://cleopatrajewelers.com/cdn/shop/products/21k-bracelets-371582_600x600.jpg?v=1695244458'
+    },
+    {
+        id: 6,
+        alt: 'Minimalist silver ring on marble',
+        src: 'https://cleopatrajewelers.com/cdn/shop/products/21k-gold-earrings-911625_600x600.jpg?v=1694577371'
+    }
+];
+
 const Luxora = () => {
     const heroRef = useRef(null);
     const featuresRef = useRef(null);
     const sliderRef = useRef(null);
+    const container = useRef();
     const cursorRef = useRef(null);
     const cursorDotRef = useRef(null);
+    const collectionsRef = useRef(null);
+    const aboutRef = useRef(null);
+    const contactRef = useRef(null);
+    const craftedRef = useRef(null);
+    const servicesRef = useRef(null);
+    const newsletterRef = useRef(null);
     const [sparkles, setSparkles] = useState([]);
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [cursorVariant, setCursorVariant] = useState('default');
-    const [gsapLoaded, setGsapLoaded] = useState(false);
+    const [activeSection, setActiveSection] = useState('hero');
 
-    const initAnimations = () => {
-        if (typeof window.gsap === 'undefined') return;
-        const gsap = window.gsap;
+    const navigationItems = [
+        { name: 'Custom Design', ref: sliderRef, id: 'featured' },
+        { name: 'Collections', ref: collectionsRef, id: 'collections' },
+        { name: 'Crafted', ref: craftedRef, id: 'crafted' },
+        { name: 'Services', ref: servicesRef, id: 'services' },
+        { name: 'News Letter', ref: newsletterRef, id: 'news' },
+        { name: 'About', ref: aboutRef, id: 'about' },
+        { name: 'Contact', ref: contactRef, id: 'contact' },
+    ];
 
+    const scrollToSection = (ref) => {
+        if (ref && ref.current) {
+            const element = ref.current;
+            const headerHeight = 80;
+            const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+            const offsetPosition = elementPosition - headerHeight;
+
+            if (typeof window.gsap !== 'undefined') {
+                window.gsap.to(window, {
+                    scrollTo: offsetPosition,
+                    duration: 1.2,
+                    ease: "power3.out"
+                });
+            } else {
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+            }
+
+            // Close mobile menu if open
+            setIsMenuOpen(false);
+        }
+    };
+
+    useGSAP(() => {
         // Hero animations
         gsap.set(".hero-title", {y: 100, opacity: 0});
         gsap.set(".hero-subtitle", {y: 50, opacity: 0});
@@ -172,18 +251,14 @@ const Luxora = () => {
             delay: 0.5
         });
 
-        // Feature cards animation
-        gsap.set(".feature-card", {y: 50, opacity: 0});
-        gsap.set(".collection-card", {y: 50, opacity: 0});
-
         // Background gradient animation
-        gsap.to(".gradient-bg", {
-            backgroundPosition: "200% 200%",
-            duration: 12,
-            repeat: -1,
-            yoyo: true,
-            ease: "none"
-        });
+        // gsap.to(".gradient-bg", {
+        //     backgroundPosition: "200% 200%",
+        //     duration: 100,
+        //     repeat: -1,
+        //     yoyo: true,
+        //     ease: "none"
+        // });
 
         // Sparkle animation for jewelry theme
         gsap.to(".sparkle", {
@@ -196,50 +271,10 @@ const Luxora = () => {
             stagger: 0.3
         });
 
-        // Scroll-triggered animations
-        const observerCallback = (entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    if (entry.target.classList.contains('collections-section')) {
-                        gsap.to(entry.target.querySelectorAll(".collection-card"), {
-                            y: 0,
-                            opacity: 1,
-                            duration: 0.8,
-                            stagger: 0.15,
-                            ease: "power3.out"
-                        });
-                    } else {
-                        gsap.to(entry.target.querySelectorAll(".feature-card"), {
-                            y: 0,
-                            opacity: 1,
-                            duration: 0.8,
-                            stagger: 0.2,
-                            ease: "power3.out"
-                        });
-                    }
-                }
-            });
-        };
+    }, );
 
-        const observer = new IntersectionObserver(observerCallback, {
-            threshold: 0.3
-        });
-
-        if (featuresRef.current) {
-            observer.observe(featuresRef.current);
-        }
-
-        // Observe collections section
-        const collectionsSection = document.querySelector('.collections-section');
-        if (collectionsSection) {
-            observer.observe(collectionsSection);
-        }
-    };
-
-    const initCursor = () => {
-        if (typeof window.gsap === 'undefined') return;
-        const gsap = window.gsap;
-
+    // Cursor animations
+    useGSAP(() => {
         const cursor = cursorRef.current;
         const cursorDot = cursorDotRef.current;
 
@@ -292,7 +327,7 @@ const Luxora = () => {
         };
 
         // Add hover effects to different elements
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
             addHoverEffect('button', 'button');
             addHoverEffect('a', 'link');
             addHoverEffect('p', 'text');
@@ -311,27 +346,133 @@ const Luxora = () => {
 
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
+            clearTimeout(timeoutId);
         };
-    };
+    }, { scope: container });
 
+    // Slide transition animations
+    useGSAP(() => {
+        gsap.fromTo(".slide-content",
+            {x: 50, opacity: 0},
+            {x: 0, opacity: 1, duration: 0.6, ease: "power1.inOut"}
+        );
+    }, {
+        dependencies: [currentSlide],
+        scope: container
+    });
+
+    // Intersection Observer for scroll-triggered animations
     useEffect(() => {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
-        script.onload = () => {
-            setGsapLoaded(true);
-            setTimeout(() => {
-                initAnimations();
-                initCursor();
-            }, 100);
+        const observerOptions = {
+            root: null,
+            rootMargin: '-20% 0px -80% 0px',
+            threshold: 0
         };
-        document.head.appendChild(script);
+
+        const observerCallback = (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const sectionId = entry.target.getAttribute('data-section');
+                    if (sectionId) {
+                        setActiveSection(sectionId);
+                    }
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+        // Observe all sections
+        const sections = [
+            { ref: heroRef, id: 'hero' },
+            { ref: sliderRef, id: 'featured' },
+            { ref: collectionsRef, id: 'collections' },
+            { ref: aboutRef, id: 'about' },
+            { ref: contactRef, id: 'contact' },
+            { ref: craftedRef, id: 'crafted' },
+            { ref: servicesRef, id: 'services' },
+            { ref: newsletterRef, id: 'news' },
+        ];
+
+        sections.forEach(({ ref, id }) => {
+            if (ref.current) {
+                ref.current.setAttribute('data-section', id);
+                observer.observe(ref.current);
+            }
+        });
 
         return () => {
-            if (document.head.contains(script)) {
-                document.head.removeChild(script);
+            sections.forEach(({ ref }) => {
+                if (ref.current) {
+                    observer.unobserve(ref.current);
+                }
+            });
+        };
+    }, []);
+
+    // Scroll-triggered animations for features and collections
+    useEffect(() => {
+        const observerCallback = (entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (entry.target.classList.contains('collections-section')) {
+                        gsap.to(entry.target.querySelectorAll(".collection-card"), {
+                            y: 0,
+                            opacity: 1,
+                            duration: 0.8,
+                            stagger: 0.15,
+                            ease: "power3.out"
+                        });
+                    } else {
+                        gsap.to(entry.target.querySelectorAll(".feature-card"), {
+                            y: 0,
+                            opacity: 1,
+                            duration: 0.8,
+                            stagger: 0.2,
+                            ease: "power3.out"
+                        });
+                    }
+                }
+            });
+        };
+
+        const observer = new IntersectionObserver(observerCallback, {
+            threshold: 0.3
+        });
+
+        if (featuresRef.current) {
+            observer.observe(featuresRef.current);
+        }
+
+        const collectionsSection = document.querySelector('.collections-section');
+        if (collectionsSection) {
+            observer.observe(collectionsSection);
+        }
+
+        return () => {
+            if (featuresRef.current) {
+                observer.unobserve(featuresRef.current);
+            }
+            if (collectionsSection) {
+                observer.unobserve(collectionsSection);
             }
         };
     }, []);
+
+    // Sparkle initialization
+    useEffect(() => {
+        const sparkleData = [...Array(12)].map(() => ({
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 3}s`,
+        }));
+        setSparkles(sparkleData);
+    }, []);
+
+    const setRefs = (el) => {
+        aboutRef.current = el;
+        contactRef.current = el;
+    };
 
     const nextSlide = () => {
         setCurrentSlide((prev) => (prev + 1) % slides.length);
@@ -341,23 +482,333 @@ const Luxora = () => {
         setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
     };
 
-    useEffect(() => {
-        if (gsapLoaded && typeof window.gsap !== 'undefined') {
-            const gsap = window.gsap;
-            gsap.fromTo(".slide-content",
-                {x: 50, opacity: 0},
-                {x: 0, opacity: 1, duration: 0.6, ease: "power3.out"}
-            );
-        }
-    }, [currentSlide, gsapLoaded]);
+    const sliderTl = useRef(null);
+    const collectionsTl = useRef(null);
+    const featuresTl = useRef(null);
+    const aboutTl = useRef(null);
+    const craftedTl = useRef(null);
+    const servicesTl = useRef(null);
+    const newsletterTl = useRef(null);
 
     useEffect(() => {
-        const sparkleData = [...Array(12)].map(() => ({
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
-            animationDelay: `${Math.random() * 3}s`,
-        }));
-        setSparkles(sparkleData);
+        // Slider Section Animation
+        sliderTl.current = gsap.timeline({
+            scrollTrigger: {
+                trigger: sliderRef.current,
+                start: "top 80%",
+                end: "bottom 20%",
+                toggleActions: "play none none reverse"
+            }
+        });
+
+        sliderTl.current
+            .from(sliderRef.current.querySelector("h2"), {
+                opacity: 0,
+                y: 50,
+                duration: 0.8,
+                ease: "power3.out"
+            })
+            .from(sliderRef.current.querySelector("p"), {
+                opacity: 0,
+                y: 30,
+                duration: 0.6,
+                ease: "power3.out"
+            }, "-=0.4")
+            .from(".slide-content", {
+                opacity: 0,
+                scale: 0.9,
+                duration: 1,
+                ease: "power3.out"
+            }, "-=0.2")
+            .from(".slider-control", {
+                scale: 0.8,
+                duration: 0.5,
+                ease: "back.out(1.7)",
+                stagger: 0.1
+            }, "-=0.5");
+
+        // Collections Section Animation
+        collectionsTl.current = gsap.timeline({
+            scrollTrigger: {
+                trigger: collectionsRef.current,
+                start: "top 80%",
+                end: "bottom 20%",
+                toggleActions: "play none none reverse"
+            }
+        });
+
+        collectionsTl.current
+            .from(collectionsRef.current.querySelector("h2"), {
+                opacity: 0,
+                y: 50,
+                duration: 0.8,
+                ease: "power3.out"
+            })
+            .from(collectionsRef.current.querySelector("p"), {
+                opacity: 0,
+                y: 30,
+                duration: 0.6,
+                ease: "power3.out"
+            }, "-=0.4")
+            .from(".collection-card", {
+                opacity: 0,
+                y: 60,
+                duration: 0.8,
+                ease: "power3.out",
+                stagger: 0.15
+            }, "-=0.2");
+
+        // Features Section Animation
+        featuresTl.current = gsap.timeline({
+            scrollTrigger: {
+                trigger: featuresRef.current,
+                start: "top 80%",
+                end: "bottom 20%",
+                toggleActions: "play none none reverse"
+            }
+        });
+
+        featuresTl.current
+            .from(featuresRef.current.querySelector("h2"), {
+                opacity: 0,
+                y: 50,
+                duration: 0.8,
+                ease: "power3.out"
+            })
+            .from(".feature-card", {
+                opacity: 0,
+                y: 60,
+                scale: 0.9,
+                duration: 0.8,
+                ease: "power3.out",
+                stagger: 0.2
+            }, "-=0.4");
+
+        // About Section Animation
+        aboutTl.current = gsap.timeline({
+            scrollTrigger: {
+                trigger: aboutRef.current,
+                start: "top 80%",
+                end: "bottom 20%",
+                toggleActions: "play none none reverse"
+            }
+        });
+
+        aboutTl.current
+            .from(aboutRef.current.querySelectorAll(".footer-heading"), {
+                opacity: 0,
+                y: 30,
+                duration: 0.6,
+                stagger: 0.2,
+                ease: "power3.out"
+            })
+            .from(aboutRef.current.querySelectorAll(".footer-text"), {
+                opacity: 0,
+                y: 20,
+                duration: 0.5,
+                stagger: 0.1,
+                ease: "power3.out"
+            }, "-=0.4")
+            .from(aboutRef.current.querySelectorAll(".footer-links li"), {
+                opacity: 0,
+                y: 10,
+                duration: 0.4,
+                stagger: 0.05,
+                ease: "power3.out"
+            }, "-=0.4")
+            .from(aboutRef.current.querySelectorAll(".lucide"), {
+                opacity: 0,
+                scale: 0.8,
+                duration: 0.5,
+                stagger: 0.1,
+                ease: "back.out(1.7)"
+            }, "-=0.3")
+
+        craftedTl.current = gsap.timeline({
+            scrollTrigger: {
+                trigger: craftedRef.current,
+                start: "top 80%",
+                end: "bottom 20%",
+                toggleActions: "play none none reverse"
+            }
+        });
+
+        craftedTl.current
+            .from(craftedRef.current.querySelectorAll(".about-title"), {
+                opacity: 0,
+                x: -100,
+                duration: 0.8,
+                ease: "power3.out"
+            })
+            .from(craftedRef.current.querySelectorAll(".about-subtitle"), {
+                opacity: 0,
+                x: -80,
+                duration: 0.6,
+                ease: "power3.out"
+            }, "-=0.4")
+            .from(craftedRef.current.querySelectorAll(".about-description"), {
+                opacity: 0,
+                y: 30,
+                duration: 0.6,
+                ease: "power3.out"
+            }, "-=0.3")
+            .from(craftedRef.current.querySelectorAll(".about-stat"), {
+                opacity: 0,
+                x: -50,
+                duration: 0.5,
+                stagger: 0.1,
+                ease: "power3.out"
+            }, "-=0.4")
+            .from(craftedRef.current.querySelectorAll(".about-image"), {
+                opacity: 0,
+                x: 100,
+                scale: 0.8,
+                duration: 0.8,
+                ease: "back.out(1.7)"
+            }, "-=0.6");
+
+        // Services Section Timeline
+        servicesTl.current = gsap.timeline({
+            scrollTrigger: {
+                trigger: servicesRef.current,
+                start: "top 80%",
+                end: "bottom 20%",
+                toggleActions: "play none none reverse"
+            }
+        });
+
+        servicesTl.current
+            .from(servicesRef.current.querySelectorAll(".services-title"), {
+                opacity: 0,
+                y: -50,
+                duration: 0.8,
+                ease: "power3.out"
+            })
+            .from(servicesRef.current.querySelectorAll(".services-description"), {
+                opacity: 0,
+                y: -30,
+                duration: 0.6,
+                ease: "power3.out"
+            }, "-=0.4")
+            .from(servicesRef.current.querySelectorAll(".service-card"), {
+                // opacity: 0,
+                // y: 100,
+                rotateY: 15,
+                duration: 0.6,
+                stagger: 0.15,
+                ease: "power3.out"
+            }, "-=0.3")
+            .from(servicesRef.current.querySelectorAll(".service-icon"), {
+                opacity: 0,
+                scale: 0.5,
+                duration: 0.4,
+                stagger: 0.1,
+                ease: "back.out(1.7)"
+            }, "-=0.4");
+
+        // Newsletter Section Timeline
+        newsletterTl.current = gsap.timeline({
+            scrollTrigger: {
+                trigger: newsletterRef.current,
+                start: "top 80%",
+                end: "bottom 20%",
+                toggleActions: "play none none reverse"
+            }
+        });
+
+        newsletterTl.current
+            .from(newsletterRef.current.querySelectorAll(".newsletter-container"), {
+                opacity: 0,
+                scale: 0.8,
+                duration: 0.8,
+                ease: "power3.out"
+            })
+            .from(newsletterRef.current.querySelectorAll(".newsletter-title"), {
+                opacity: 0,
+                x: -50,
+                duration: 0.6,
+                ease: "power3.out"
+            }, "-=0.4")
+            .from(newsletterRef.current.querySelectorAll(".newsletter-description"), {
+                opacity: 0,
+                y: 20,
+                duration: 0.5,
+                ease: "power3.out"
+            }, "-=0.3")
+            .from(newsletterRef.current.querySelectorAll(".newsletter-form > *"), {
+                // opacity: 0,
+                // y: 30,
+                duration: 0.4,
+                stagger: 0.1,
+                ease: "power3.out"
+            }, "-=0.3");
+
+        // Continuous floating animation for service cards
+        gsap.to(".service-card", {
+            y: -10,
+            duration: 2,
+            ease: "power1.inOut",
+            stagger: 0.1,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Cleanup function
+        return () => {
+            ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+        };
+    }, []);
+
+    const scrollImageRef = useRef(null);
+    useGSAP(() => {
+        const images = gsap.utils.toArray('.image-box');
+
+        // Show first image by default
+        gsap.set(images[0], { opacity: 1, scale: 1 });
+
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: scrollImageRef.current,
+                start: 'top top',
+                end: `+=${(images.length - 1) * 100}%`,
+                scrub: true,
+                pin: true,
+            }
+        });
+
+        images.forEach((img, i) => {
+            if (i === 0) {
+                // First image: only fade out
+                tl.to(
+                    img,
+                    { opacity: 0, scale: 1.05, duration: 1 },
+                    i + 0.8
+                );
+            } else {
+                // All others: fade in
+                tl.fromTo(
+                    img,
+                    { opacity: 0, scale: 0.9 },
+                    { opacity: 1, scale: 1, duration: 1 },
+                    i
+                );
+
+                // ...and fade out (except last)
+                if (i < images.length - 1) {
+                    tl.to(
+                        img,
+                        { opacity: 0, scale: 1.05, duration: 1 },
+                        i + 0.8
+                    );
+                }
+            }
+        });
+    }, { scope: scrollImageRef });
+
+    useEffect(() => {
+        setTimeout(() => {
+            ScrollTrigger.refresh();
+        }, 100);
     }, []);
 
     return (
@@ -384,15 +835,6 @@ const Luxora = () => {
                 style={{transform: 'translate(-50%, -50%)'}}
             ></div>
 
-            {/* Animated Background */}
-            <div
-                className="gradient-bg fixed inset-0 bg-gradient-to-br from-amber-900 via-rose-900 to-purple-900 opacity-80"
-                style={{
-                    backgroundSize: '400% 400%',
-                    backgroundImage: 'linear-gradient(-45deg, #451a03, #7c2d12, #be185d, #7c3aed, #d97706, #dc2626)'
-                }}>
-            </div>
-
             {/* Sparkles for jewelry theme */}
             <div className="fixed inset-0 pointer-events-none z-5">
                 {sparkles.map((style, i) => (
@@ -412,40 +854,39 @@ const Luxora = () => {
                             opacity: 0.2,
                         }}
                     >
-                        <path d="M12 2 L12 6 M12 18 L12 22 M2 12 L6 12 M18 12 L22 12 M4.22 4.22 L6.34 6.34 M17.66 17.66 L19.78 19.78 M4.22 19.78 L6.34 17.66 M17.66 6.34 L19.78 4.22" />
+                        <path
+                            d="M12 2 L12 6 M12 18 L12 22 M2 12 L6 12 M18 12 L22 12 M4.22 4.22 L6.34 6.34 M17.66 17.66 L19.78 19.78 M4.22 19.78 L6.34 17.66 M17.66 6.34 L19.78 4.22"/>
                     </svg>
                 ))}
             </div>
-            {/*<div className="fixed inset-0 pointer-events-none z-5">*/}
-            {/*    {[...Array(12)].map((_, i) => (*/}
-            {/*        <div*/}
-            {/*            key={i}*/}
-            {/*            className="sparkle absolute w-2 h-2 bg-yellow-300 rounded-full opacity-20"*/}
-            {/*            style={{*/}
-            {/*                left: `${Math.random() * 100}%`,*/}
-            {/*                top: `${Math.random() * 100}%`,*/}
-            {/*                animationDelay: `${Math.random() * 3}s`*/}
-            {/*            }}*/}
-            {/*        ></div>*/}
-            {/*    ))}*/}
-            {/*</div>*/}
 
             {/* Navigation */}
-            <nav className="relative z-50 px-6 py-4">
+            <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4 bg-black/30 backdrop-blur-md">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
                     <div className="text-2xl font-bold text-white">
-                        <span className="header_logo bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent flex items-center gap-2">
-                            <Gem size={28} className="text-amber-400" />
+                        <button
+                            onClick={() => scrollToSection(heroRef)}
+                            className="header_logo bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent flex items-center gap-2 hover:scale-105 transition-transform duration-300"
+                        >
+                            <Gem size={28} className="text-amber-400"/>
                             LUXORA
-                        </span>
+                        </button>
                     </div>
 
                     <div className="hidden md:flex space-x-8">
-                        {['Collections', 'Custom Design', 'About', 'Contact'].map((item) => (
-                            <a key={item} href="#"
-                               className="text-white hover:text-amber-300 transition-colors duration-300">
-                                {item}
-                            </a>
+                        {navigationItems.map((item) => (
+                            <button
+                                key={item.name}
+                                onClick={() => scrollToSection(item.ref)}
+                                className={`relative text-white hover:text-amber-300 transition-all duration-300 py-2 px-1 ${
+                                    activeSection === item.id ? 'text-amber-300' : ''
+                                }`}
+                            >
+                                {item.name}
+                                {/*{activeSection === item.id && (*/}
+                                {/*    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full"></div>*/}
+                                {/*)}*/}
+                            </button>
                         ))}
                     </div>
 
@@ -457,15 +898,20 @@ const Luxora = () => {
                     </button>
                 </div>
 
-                {/* Mobile Menu */}
                 {isMenuOpen && (
-                    <div className="md:hidden absolute top-full left-0 right-0 bg-black bg-opacity-90 backdrop-blur-lg">
+                    <div
+                        className="md:hidden absolute top-full left-0 right-0 bg-black/90 backdrop-blur-lg border-b border-white/10">
                         <div className="px-6 py-4 space-y-4">
-                            {['Collections', 'Custom Design', 'About', 'Contact'].map((item) => (
-                                <a key={item} href="#"
-                                   className="block text-white hover:text-amber-300 transition-colors">
-                                    {item}
-                                </a>
+                            {navigationItems.map((item) => (
+                                <button
+                                    key={item.name}
+                                    onClick={() => scrollToSection(item.ref)}
+                                    className={`block w-full text-left text-white hover:text-amber-300 transition-colors py-2 ${
+                                        activeSection === item.id ? 'text-amber-300' : ''
+                                    }`}
+                                >
+                                    {item.name}
+                                </button>
                             ))}
                         </div>
                     </div>
@@ -484,10 +930,12 @@ const Luxora = () => {
                             </span>
                         </h1>
                         <p className="hero-subtitle text-xl text-gray-300 mb-8 max-w-lg">
-                            Discover our exquisite collection of handcrafted jewelry, where each piece tells a story of luxury, craftsmanship, and eternal beauty.
+                            Discover our exquisite collection of handcrafted jewelry, where each piece tells a story of
+                            luxury, craftsmanship, and eternal beauty.
                         </p>
                         <div className="hero-cta flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                             <button
+                                onClick={() => scrollToSection(collectionsRef)}
                                 className="group px-8 py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full font-semibold hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 transform hover:scale-105">
                                 <span className="flex items-center justify-center gap-2">
                                     Shop Collection
@@ -526,13 +974,13 @@ const Luxora = () => {
                         <div
                             className="floating-2 absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-rose-400/30 to-pink-400/30 rounded-full backdrop-blur-xl border border-white/10"></div>
                         <div
-                            className="absolute -bottom-10 -left-10 w-24 h-24 bg-gradient-to-br from-amber-400/30 to-orange-400/30 rounded-full backdrop-blur-xl border border-white/10"></div>
+                            className="floating-1 absolute -bottom-10 -left-0 w-24 h-24 bg-gradient-to-br from-amber-400/30 to-orange-400/30 rounded-full backdrop-blur-xl border border-white/10"></div>
                     </div>
                 </div>
             </section>
 
             {/* Interactive Slider Section */}
-            <section ref={sliderRef} className="relative z-10 py-20 px-6">
+            <section ref={sliderRef} className="relative z-10 py-20 px-6 img">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
@@ -559,6 +1007,7 @@ const Luxora = () => {
                                                 <p className="text-xl text-amber-300 mb-6">{slide.subtitle}</p>
                                                 <p className="text-gray-300 text-lg mb-8">{slide.description}</p>
                                                 <button
+                                                    onClick={() => scrollToSection(collectionsRef)}
                                                     className="px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full font-semibold hover:shadow-lg hover:shadow-amber-500/25 transition-all duration-300 transform hover:scale-105">
                                                     View Collection
                                                 </button>
@@ -581,13 +1030,13 @@ const Luxora = () => {
                         {/* Slider Controls */}
                         <button
                             onClick={prevSlide}
-                            className="slider-control absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300"
+                            className="slider-control absolute -left-6 top-[40%] w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300"
                         >
                             <ChevronLeft size={24}/>
                         </button>
                         <button
                             onClick={nextSlide}
-                            className="slider-control absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300"
+                            className="slider-control absolute -right-6 top-[40%]  w-12 h-12 bg-white/10 backdrop-blur-lg border border-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all duration-300"
                         >
                             <ChevronRight size={24}/>
                         </button>
@@ -611,12 +1060,13 @@ const Luxora = () => {
             </section>
 
             {/* Jewelry Collections Grid */}
-            <section className="collections-section relative z-10 py-20 px-6">
+            <section ref={collectionsRef} className="collections-section relative z-10 py-20 px-6">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
                             Our
-                            <span className="bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-transparent"> Collections</span>
+                            <span
+                                className="bg-gradient-to-r from-rose-400 to-pink-400 bg-clip-text text-transparent"> Collections</span>
                         </h2>
                         <p className="text-xl text-gray-300 max-w-2xl mx-auto">
                             From engagement rings to statement necklaces, find the perfect piece for every occasion
@@ -626,14 +1076,16 @@ const Luxora = () => {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {jewelryCollections.map((item, index) => (
                             <div key={index} className="collection-card group">
-                                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">
+                                <div
+                                    className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden hover:bg-white/10 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl">
                                     <div className="relative overflow-hidden">
                                         <img
                                             src={item.image}
                                             alt={item.name}
                                             className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
                                         />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                        <div
+                                            className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                                         <div className="absolute bottom-4 left-4 right-4">
                                             <div className="text-amber-300 font-bold text-lg mb-1">{item.price}</div>
                                         </div>
@@ -641,7 +1093,8 @@ const Luxora = () => {
                                     <div className="p-6">
                                         <h3 className="text-xl font-bold text-white mb-2">{item.name}</h3>
                                         <p className="text-gray-300 mb-4">{item.description}</p>
-                                        <button className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-amber-500/25 transition-all duration-300">
+                                        <button
+                                            className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-amber-500/25 transition-all duration-300">
                                             View Details
                                         </button>
                                     </div>
@@ -687,16 +1140,18 @@ const Luxora = () => {
                     <div className="text-center mb-16">
                         <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
                             What Our
-                            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"> Clients Say</span>
+                            <span
+                                className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"> Clients Say</span>
                         </h2>
                     </div>
 
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {testimonials?.map((testimonial, index) => (
-                            <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
+                            <div key={index}
+                                 className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300">
                                 <div className="flex mb-4">
                                     {[...Array(testimonial.rating)].map((_, i) => (
-                                        <Star key={i} size={20} className="text-yellow-400 fill-current" />
+                                        <Star key={i} size={20} className="text-yellow-400 fill-current"/>
                                     ))}
                                 </div>
                                 <p className="text-gray-300 mb-4 italic">"{testimonial.text}"</p>
@@ -707,25 +1162,49 @@ const Luxora = () => {
                 </div>
             </section>
 
+            {/* ImageScroll Section*/}
+            <section ref={scrollImageRef} className="w-full py-24 px-6">
+                <div className="relative w-full h-[600px]">
+                    {jewelryScrollableImages.map((n) => (
+                        <div
+                            key={n.id}
+                            className="image-box absolute top-4 left-0 container w-full h-full flex justify-center items-center"
+                        >
+                            <Image
+                                height={500}
+                                width={500}
+                                src={n.src}
+                                alt={n.alt}
+                                objectFit="cover"
+                                className="rounded-xl"
+                            />
+                        </div>
+                    ))}
+                </div>
+            </section>
+
             {/* About Section */}
-            <section className="relative z-10 py-20 px-6">
+            <section ref={craftedRef} className="about-section relative z-10 py-20 px-6">
                 <div className="max-w-6xl mx-auto">
                     <div className="grid lg:grid-cols-2 gap-12 items-center">
                         <div>
-                            <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+                            <h2 className="about-title text-4xl lg:text-5xl font-bold text-white mb-6">
                                 Crafted with
-                                <span className="bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent block">
+                                <span
+                                    className="about-subtitle bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent block">
                                     Passion & Precision
                                 </span>
                             </h2>
-                            <p className="text-xl text-gray-300 mb-6">
+                            <p className="about-description text-xl text-gray-300 mb-6">
                                 For over three decades, Luxora has been at the forefront of fine jewelry craftsmanship.
-                                Our master artisans combine traditional techniques with modern innovation to create pieces
+                                Our master artisans combine traditional techniques with modern innovation to create
+                                pieces
                                 that are not just beautiful, but timeless.
                             </p>
                             <div className="space-y-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-400 rounded-full flex items-center justify-center">
+                                <div className="about-stat flex items-center gap-4">
+                                    <div
+                                        className="w-12 h-12 bg-gradient-to-br from-amber-400 to-yellow-400 rounded-full flex items-center justify-center">
                                         <span className="text-white font-bold">30+</span>
                                     </div>
                                     <div>
@@ -733,8 +1212,9 @@ const Luxora = () => {
                                         <p className="text-gray-400">Trusted by generations</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-400 rounded-full flex items-center justify-center">
+                                <div className="about-stat flex items-center gap-4">
+                                    <div
+                                        className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-400 rounded-full flex items-center justify-center">
                                         <span className="text-white font-bold">50K+</span>
                                     </div>
                                     <div>
@@ -742,8 +1222,9 @@ const Luxora = () => {
                                         <p className="text-gray-400">Worldwide satisfaction</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-rose-400 to-pink-400 rounded-full flex items-center justify-center">
+                                <div className="about-stat flex items-center gap-4">
+                                    <div
+                                        className="w-12 h-12 bg-gradient-to-br from-rose-400 to-pink-400 rounded-full flex items-center justify-center">
                                         <span className="text-white font-bold">100%</span>
                                     </div>
                                     <div>
@@ -759,29 +1240,33 @@ const Luxora = () => {
                                 alt="Master Craftsman"
                                 className="w-full h-96 object-cover rounded-2xl shadow-2xl"
                             />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-2xl"></div>
+                            <div
+                                className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-2xl"></div>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Services Section */}
-            <section className="relative z-10 py-20 px-6">
+            <section ref={servicesRef} className="services-section relative z-10 py-20 px-6">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-16">
-                        <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+                        <h2 className="services-title text-4xl lg:text-5xl font-bold text-white mb-6">
                             Our
-                            <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent"> Services</span>
+                            <span
+                                className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent"> Services</span>
                         </h2>
-                        <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-                            Beyond creating beautiful jewelry, we offer comprehensive services to ensure your pieces remain perfect
+                        <p className="services-description text-xl text-gray-300 max-w-2xl mx-auto">
+                            Beyond creating beautiful jewelry, we offer comprehensive services to ensure your pieces
+                            remain perfect
                         </p>
                     </div>
 
-                    <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="services-grid grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {services?.map((service, index) => (
-                            <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
-                                <div className="text-4xl mb-4">{service.icon}</div>
+                            <div key={index}
+                                 className="service-card bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
+                                <div className="service-icon text-4xl mb-4">{service.icon}</div>
                                 <h3 className="text-xl font-bold text-white mb-3">{service.title}</h3>
                                 <p className="text-gray-300 text-sm leading-relaxed">{service.description}</p>
                             </div>
@@ -791,23 +1276,26 @@ const Luxora = () => {
             </section>
 
             {/* Newsletter Section */}
-            <section className="relative z-10 py-20 px-6">
+            <section ref={newsletterRef} className="newsletter-section relative z-10 py-20 px-6">
                 <div className="max-w-4xl mx-auto text-center">
-                    <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 backdrop-blur-xl border border-white/10 rounded-3xl p-12">
-                        <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
+                    <div
+                        className="newsletter-container bg-gradient-to-r from-purple-500/10 to-pink-500/10 backdrop-blur-xl border border-white/10 rounded-3xl p-12">
+                        <h2 className="newsletter-title text-4xl lg:text-5xl font-bold text-white mb-6">
                             Stay
-                            <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"> Updated</span>
+                            <span
+                                className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"> Updated</span>
                         </h2>
-                        <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                        <p className="newsletter-description text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
                             Be the first to know about new collections, exclusive offers, and jewelry care tips
                         </p>
-                        <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                        <div className="newsletter-form flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
                             <input
                                 type="email"
                                 placeholder="Enter your email"
                                 className="flex-1 px-6 py-3 bg-white/10 border border-white/20 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 backdrop-blur-sm"
                             />
-                            <button className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105">
+                            <button
+                                className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full font-semibold hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 transform hover:scale-105">
                                 Subscribe
                             </button>
                         </div>
@@ -815,56 +1303,24 @@ const Luxora = () => {
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="relative z-10 py-20 px-6">
-                <div className="max-w-4xl mx-auto text-center">
-                    <div
-                        className="bg-gradient-to-r from-amber-500/10 to-yellow-500/10 backdrop-blur-xl border border-white/10 rounded-3xl p-12">
-                        <h2 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-                            Ready to Find Your
-                            <span
-                                className="bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent block">
-                                Perfect Piece?
-                            </span>
-                        </h2>
-                        <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-                            Visit our showroom or book a consultation with our jewelry experts to discover your ideal piece
-                        </p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <button
-                                className="group px-10 py-5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full font-bold text-lg hover:shadow-2xl hover:shadow-amber-500/25 transition-all duration-300 transform hover:scale-105">
-                                <span className="flex items-center justify-center gap-3">
-                                    Visit Showroom
-                                    <ArrowRight size={24} className="group-hover:translate-x-1 transition-transform"/>
-                                </span>
-                            </button>
-                            <button
-                                className="group px-10 py-5 border-2 border-amber-400/50 text-amber-300 rounded-full font-bold text-lg hover:bg-amber-500/10 transition-all duration-300 backdrop-blur-sm">
-                                <span className="flex items-center justify-center gap-3">
-                                    Book Consultation
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             {/* Footer */}
-            <footer className="relative z-10 py-16 px-6 border-t border-white/10">
+            <footer ref={setRefs} className="relative z-10 py-16 px-6 border-t border-white/10">
                 <div className="max-w-6xl mx-auto">
                     <div className="grid md:grid-cols-4 gap-8">
                         <div>
                             <div className="text-2xl font-bold text-white mb-4">
-                                <span className="bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent flex items-center gap-2">
-                                    <Gem size={28} className="text-amber-400" />
+                                <span
+                                    className="bg-gradient-to-r from-amber-400 to-yellow-400 bg-clip-text text-transparent flex items-center gap-2">
+                                    <Gem size={28} className="text-amber-400"/>
                                     LUXORA
                                 </span>
                             </div>
-                            <p className="text-gray-300 mb-4">
+                            <p className="footer-text text-gray-300 mb-4">
                                 Crafting timeless elegance since 1990. Where luxury meets artistry.
                             </p>
                             <div className="flex space-x-4">
-                                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
+                                <div
+                                    className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                          fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
                                          strokeLinejoin="round"
@@ -895,20 +1351,22 @@ const Luxora = () => {
                             </div>
                         </div>
                         <div>
-                            <h4 className="text-white font-semibold mb-4">Collections</h4>
-                            <ul className="space-y-2 text-gray-300">
+                            <h4 className="footer-heading text-white font-semibold mb-4">Collections</h4>
+                            <ul className="footer-links space-y-2 text-gray-300">
                                 <li><a href="#" className="hover:text-amber-300 transition-colors">Engagement Rings</a>
                                 </li>
-                                <li><a href="#" className="hover:text-amber-300 transition-colors">Wedding Bands</a></li>
+                                <li><a href="#" className="hover:text-amber-300 transition-colors">Wedding Bands</a>
+                                </li>
                                 <li><a href="#" className="hover:text-amber-300 transition-colors">Necklaces</a></li>
                                 <li><a href="#" className="hover:text-amber-300 transition-colors">Earrings</a></li>
                                 <li><a href="#" className="hover:text-amber-300 transition-colors">Bracelets</a></li>
                             </ul>
                         </div>
                         <div>
-                            <h4 className="text-white font-semibold mb-4">Services</h4>
-                            <ul className="space-y-2 text-gray-300">
-                                <li><a href="#" className="hover:text-amber-300 transition-colors">Custom Design</a></li>
+                            <h4 className="footer-heading text-white font-semibold mb-4">Services</h4>
+                            <ul className="footer-links space-y-2 text-gray-300">
+                                <li><a href="#" className="hover:text-amber-300 transition-colors">Custom Design</a>
+                                </li>
                                 <li><a href="#" className="hover:text-amber-300 transition-colors">Repairs</a></li>
                                 <li><a href="#" className="hover:text-amber-300 transition-colors">Appraisals</a></li>
                                 <li><a href="#" className="hover:text-amber-300 transition-colors">Cleaning</a></li>
@@ -916,12 +1374,12 @@ const Luxora = () => {
                             </ul>
                         </div>
                         <div>
-                            <h4 className="text-white font-semibold mb-4">Contact</h4>
-                            <div className="space-y-2 text-gray-300">
-                                <p>123 Luxury Avenue</p>
-                                <p>Beverly Hills, CA 90210</p>
-                                <p>Phone: (555) 123-4567</p>
-                                <p>Email: info@luxora.com</p>
+                            <h4 className="footer-heading text-white font-semibold mb-4">Contact</h4>
+                            <div className=" space-y-2 text-gray-300">
+                                <p className="footer-text">123 Luxury Avenue</p>
+                                <p className="footer-text">Beverly Hills, CA 90210</p>
+                                <p className="footer-text">Phone: (555) 123-4567</p>
+                                <p className="footer-text">Email: info@luxora.com</p>
                             </div>
                         </div>
                     </div>
